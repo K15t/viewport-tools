@@ -1,6 +1,6 @@
 {
   "name": "viewport-tools",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Developer tools for Scroll Viewport theme developers (more info: https://www.k15t.com/software/scroll-viewport).",
   "preferGlobal": true,
   "bin": {
@@ -8,18 +8,12 @@
   },
   "dependencies": {
     "args": "^3.0.2",
-    "cheerio": "^0.19.0",
     "debug": "^2.2.0",
     "download-git-repo": "^1.0.1",
-    "extend": "^2.0.1",
-    "github-download": "^0.5.0",
-    "glob": "^5.0.5",
-    "handlebars": "^3.0.3",
+    "fs-extra": "^5.0.0",
+    "home-config": "^0.1.0",
     "inquirer": "0.8.2",
-    "mkdirp": "^0.5.1",
-    "q": "1.2.0",
-    "request": "^2.55.0",
-    "string": "^3.1.1"
+    "q": "1.2.0"
   },
   "main": "index.js",
   "scripts": {
