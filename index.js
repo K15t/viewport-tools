@@ -7,18 +7,20 @@
 
 var args = require('args'),
     debug = require('debug')('spark'),
-    downloadFromGit = require ('download-git-repo'),
+    downloadFromGit = require('download-git-repo'),
     fs = require('fs'),
+    fse = require('fs-extra'),
+    homeConfig = require('home-config'),
     inquirer = require('inquirer'),
     path = require('path'),
     q = require('q');
 
 
-
 function main() {
 
-    args.command('create', 'Create a new viewport template', createThemeProject, ['c']);
-    args.example('viewport create', 'Create a new Scroll Viewport theme project:');
+    args.command('init', 'Initialize local development and create ~/.viewportrc file.', initViewportDevelopment, ['i']);
+    args.command('create', 'Create a new viewport project.', createThemeProject, ['c']);
+    args.example('viewport create', 'Create a new Scroll Viewport theme project');
     args.parse(process.argv, {
         version: false
     });
@@ -29,9 +31,12 @@ function main() {
 }
 
 
+// == create =============================================================
+
 
 function createThemeProject() {
-    var project = {
+    var action = {
+        welcomeMessage: 'Create a new viewport theme project.',
         cwd: process.cwd(),
         theme: {
             key: undefined,
@@ -39,28 +44,29 @@ function createThemeProject() {
         }
     };
 
-    showWelcomeMessage(project)
+    showWelcomeMessage(action)
         .then(readProjectInfo)
         .then(createProjectDir)
         .then(downloadTheme)
         .then(modifyPackageJson)
+        .then(showGetStartedMessage)
     ;
 }
 
 
-
-function showWelcomeMessage(project) {
+function showWelcomeMessage(action) {
 
     console.log('');
-    console.log('sloo⊥ ɹǝdolǝʌǝᗡ ʇɹodʍǝıΛ \\ Viewport Developer Tools');
+    console.log('Viewport Developer Tools // sloo⊥ ɹǝdolǝʌǝᗡ ʇɹodʍǝıΛ');
+    console.log('');
+    console.log('  ' + action.welcomeMessage);
     console.log('');
 
-    return q.resolve(project);
+    return q.resolve(action);
 }
 
 
-
-function readProjectInfo(project) {
+function readProjectInfo(action) {
     var deferred = q.defer();
 
     inquirer.prompt([
@@ -68,16 +74,16 @@ function readProjectInfo(project) {
             type: 'input',
             name: 'key',
             message: 'Theme Key, e.g. my-viewport-theme',
-            'validate': function (value) {
+            'validate': function(value) {
                 var pass = value.match(/^[a-z][a-z0-9_-]+$/i);
                 if (pass) {
-                    if (fs.existsSync(path.join(project.cwd, value))) {
+                    if (fs.existsSync(path.join(action.cwd, value))) {
                         return "Folder with name '" + value + "' already exists. Use different project key.";
                     } else {
                         return true;
                     }
                 } else {
-                    return "Please enter a valid SPA key (starts with a letter & contains only alpha-numeric characters, '-', and '_'.";
+                    return "Please enter a valid theme key (starts with a letter & contains only alpha-numeric characters, '-', and '_'.";
                 }
             }
         },
@@ -93,17 +99,24 @@ function readProjectInfo(project) {
             message: 'Theme',
             choices: [
                 {
-                    name: 'Twitter Bootstrap Theme',
-                    value: 'github:K15t/spark-tools'
-                },
-                {
-                    name: 'Foundation Theme',
-                    value: 'github:K15t/spark-tools'
-                },
-                {
-                    name: 'Simple Theme',
-                    value: 'github:K15t/spark-tools'
+                    name: 'Example Theme (with Gulp & Less)',
+                    value: {
+                        repo: 'github:K15t/gulp-viewport',
+                        path: 'example',
+                        getStartedMessages: [
+                            'Run \'npm i\' to install required dependencies.',
+                            'Run \'gulp watch\' and start developing.'
+                        ]
+                    }
                 }
+                // add more bootstrap projects here
+                // ,{
+                //     name: 'Twitter Bootstrap Theme',
+                //     value: {
+                //         repo: 'github:K15t/spark-tools'
+                //         path: undefined
+                //     }
+                // }
             ]
         },
         {
@@ -113,13 +126,13 @@ function readProjectInfo(project) {
             'default': true
         }
     ], function(answers) {
-        project.theme = answers;
+        action.theme = answers;
 
         if (!answers.everythingOk) {
             deferred.reject(new Error('Aborted.'));
         } else {
-            delete project.theme.everythingOk;
-            deferred.resolve(project);
+            delete action.theme.everythingOk;
+            deferred.resolve(action);
         }
     });
 
@@ -127,20 +140,19 @@ function readProjectInfo(project) {
 }
 
 
-
-function createProjectDir(project) {
-    if (fs.existsSync(path.join(project.cwd, project.theme.key))) {
-        return q.reject(new Error("Folder with name '" + project.theme.key + "' already exists."));
+function createProjectDir(action) {
+    if (fs.existsSync(path.join(action.cwd, action.theme.key))) {
+        return q.reject(new Error("Folder with name '" + action.theme.key + "' already exists."));
     }
 
     try {
-        fs.mkdirSync(path.join(project.cwd, project.theme.key));
-        return q.resolve(project);
+        fs.mkdirSync(path.join(action.cwd, action.theme.key));
+        return q.resolve(action);
 
     } catch (e) {
         if (e.code === 'EEXIST') {
-            debug("Folder with name '" + project.theme.key + "' already exists.");
-            return q.resolve(project);
+            debug("Folder with name '" + action.theme.key + "' already exists.");
+            return q.resolve(action);
 
         } else {
             return q.reject(e);
@@ -150,24 +162,131 @@ function createProjectDir(project) {
 }
 
 
-
-function downloadTheme(project) {
+function downloadTheme(action) {
     var deferred = q.defer();
 
-    downloadFromGit(project.theme.template, project.theme.key, function (err) {
-        err ? deferred.reject(e) : deferred.resolve(project);
+    downloadFromGit(action.theme.template.repo, action.theme.key, function(err) {
+        if(err) {
+            deferred.reject(err);
+        } else {
+            if (action.theme.template.path) {
+                fs.renameSync(path.join(action.cwd, action.theme.key), path.join(action.cwd, "_toDelete"));
+                fse.moveSync(path.join(action.cwd, "_toDelete/", action.theme.template.path),
+                    path.join(action.cwd, action.theme.template.path));
+                fse.removeSync(path.join(action.cwd, "_toDelete/"));
+                fs.renameSync(path.join(action.cwd, action.theme.template.path), path.join(action.cwd, action.theme.key));
+            }
+
+            deferred.resolve(action);
+        }
     });
 
+    return deferred.promise;
 }
 
 
+function modifyPackageJson(action) {
+    let packageJsonPath = path.join(action.cwd, action.theme.key, 'package.json');
+    let packageJsonContent = fs.readFileSync(packageJsonPath, 'utf8');
+    let packageJson = JSON.parse(packageJsonContent);
+    packageJson.name = action.theme.key;
+    packageJson.version = action.theme.version;
 
-function modifyPackageJson(project) {
-    var packageJsonContent = fs.readFileSync(path.join(process.cwd(), 'package.json'), 'utf8');
-    var packageJson = JSON.parse(packageJsonContent);
-    packageJson.name = project.theme.name;
-    packageJson.version = project.theme.version;
-    fs.writeFileSync(path.join(process.cwd(), 'package.json'), JSON.stringify(packageJson));
+    fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2), 'utf8');
+
+    return q.resolve(action);
+}
+
+
+function showGetStartedMessage(action) {
+    let cnt = 1;
+    console.log('');
+    console.log('You\'re awesome. Project \'' + action.theme.key + '\' created. Now, let\'s start developing:');
+    console.log('  ' + cnt++ + '. Change into directory: \'cd ' + action.theme.key + '\'.');
+
+    for (let msg of action.theme.template.getStartedMessages) {
+        console.log('  ' + cnt++ + '. ' + msg + '');
+    }
+
+    return q.resolve(action);
+}
+
+
+// == init =============================================================
+
+
+function initViewportDevelopment() {
+    let action = {
+        welcomeMessage: 'Initialize local viewport theme development and create ~/.viewportrc file.\n' +
+        'Security Warning: Please use this for a development system only.',
+        viewportrc: {
+            confluenceBaseUrl: 'http://localhost:1990/confluence',
+            username: 'admin',
+            password: 'admin'
+        }
+    };
+
+    showWelcomeMessage(action)
+        .then(readParams)
+        .then(createViewportrc)
+}
+
+
+function readParams(action) {
+    let deferred = q.defer();
+
+    inquirer.prompt([
+        {
+            type: 'input',
+            name: 'confluenceBaseUrl',
+            message: 'Confluence Base URL, e.g. http://localhost:1990/confluence',
+            'default': 'http://localhost:1990/confluence'
+        },
+        {
+            type: 'input',
+            name: 'username',
+            message: 'Username',
+            'default': 'admin'
+        },
+        {
+            type: 'password',
+            name: 'password',
+            message: 'Password',
+            'default': 'admin'
+        },
+        {
+            type: 'confirm',
+            name: 'everythingOk',
+            message: 'About to create ~/.viewportrc. Everything ok?',
+            'default': true
+        }
+    ], function(answers) {
+        action.viewportrc = answers;
+
+        if (!answers.everythingOk) {
+            deferred.reject(new Error('Aborted.'));
+        } else {
+            delete action.viewportrc.everythingOk;
+            deferred.resolve(action);
+        }
+    });
+
+    return deferred.promise;
+}
+
+
+function createViewportrc(action) {
+    let viewportRc = homeConfig.load('.viewportrc', {});
+
+    // if [DEV] is already defined, we'll back it up.
+    if (viewportRc.DEV) {
+        viewportRc['DEV_' + new Date().toISOString().substring(0, 19)] = viewportRc.DEV;
+    }
+
+    viewportRc.DEV = action.viewportrc;
+    viewportRc.save('.viewportrc');
+
+    return q.resolve(action);
 }
 
 
