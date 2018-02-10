@@ -35,6 +35,7 @@ Create a new Scroll Viewport theme project:
 $ viewport create
 ```
 
+NOTE: Make sure to follow the getting started steps provided when the theme has been created.
 
 
 ## Development

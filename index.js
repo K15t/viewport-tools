@@ -31,12 +31,13 @@ function main() {
 }
 
 
-// == create =============================================================
 
+// == create =============================================================
 
 function createThemeProject() {
     var action = {
         welcomeMessage: 'Create a new viewport theme project.',
+        viewportrc: homeConfig.load('.viewportrc')['DEV'],
         cwd: process.cwd(),
         theme: {
             key: undefined,
@@ -49,6 +50,7 @@ function createThemeProject() {
         .then(createProjectDir)
         .then(downloadTheme)
         .then(modifyPackageJson)
+        .then(modifyGulpfileJs)
         .then(showGetStartedMessage)
     ;
 }
@@ -103,18 +105,35 @@ function readProjectInfo(action) {
                     value: {
                         repo: 'github:K15t/gulp-viewport',
                         path: 'example',
+                        replacements: {
+                            'var THEME_NAME = \'your-theme-name\';': function(action) {
+                                return `var THEME_NAME = '${action.theme.key}';`;
+                            },
+                            'var BROWSERSYNC_URL = \'http://localhost:1990/confluence\';': function(action) {
+                                if (action.viewportrc){
+                                    return `var BROWSERSYNC_URL = '${action.viewportrc.confluenceBaseUrl}';`;
+                                } else {
+                                    return `var BROWSERSYNC_URL = 'http://localhost:1990/confluence';`;
+                                }
+                            }
+                        },
                         getStartedMessages: [
                             'Run \'npm i\' to install required dependencies.',
-                            'Run \'gulp watch\' and start developing.'
+                            'Run \'gulp create && gulp watch\' and start developing.'
                         ]
                     }
                 }
-                // add more bootstrap projects here
-                // ,{
-                //     name: 'Twitter Bootstrap Theme',
+                // ,
+                // {
+                //     name: 'Viewport ',
                 //     value: {
-                //         repo: 'github:K15t/spark-tools'
-                //         path: undefined
+                //         repo: 'bitbucket:K15t/viewport-theme-foundation',
+                //         path: undefined,
+                //         getStartedMessages: [
+                //             'Run \'npm i\' to install required dependencies.',
+                //             'Run \'bower install\' to install required dependencies.',
+                //             'Run \'gulp create && gulp watch\' and start developing.'
+                //         ]
                 //     }
                 // }
             ]
@@ -198,6 +217,22 @@ function modifyPackageJson(action) {
 }
 
 
+function modifyGulpfileJs(action) {
+    let gulpfileJsPath = path.join(action.cwd, action.theme.key, 'gulpfile.js');
+    let gulpfileJsContent = fs.readFileSync(gulpfileJsPath, 'utf8');
+
+    for (let key in action.theme.template.replacements) {
+        if (action.theme.template.replacements.hasOwnProperty(key)) {
+            gulpfileJsContent = gulpfileJsContent.replace(key, action.theme.template.replacements[key](action));
+        }
+    }
+
+    fs.writeFileSync(gulpfileJsPath, gulpfileJsContent, 'utf8');
+
+    return q.resolve(action);
+}
+
+
 function showGetStartedMessage(action) {
     let cnt = 1;
     console.log('');
@@ -212,13 +247,13 @@ function showGetStartedMessage(action) {
 }
 
 
-// == init =============================================================
 
+// == init =============================================================
 
 function initViewportDevelopment() {
     let action = {
         welcomeMessage: 'Initialize local viewport theme development and create ~/.viewportrc file.\n' +
-        'Security Warning: Please use this for a development system only.',
+        '  Security Warning: Please use this for development and testing systems only.',
         viewportrc: {
             confluenceBaseUrl: 'http://localhost:1990/confluence',
             username: 'admin',
