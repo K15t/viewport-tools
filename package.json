@@ -1,6 +1,6 @@
 {
   "name": "viewport-tools",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Developer tools for Scroll Viewport theme developers (more info: https://www.k15t.com/software/scroll-viewport).",
   "preferGlobal": true,
   "bin": {

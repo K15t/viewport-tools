@@ -13,7 +13,7 @@ Being command-line the viewport-tools should be installed globally.
 $ npm install -g viewport-tools
 ```
 
-If that doesn't work try to ``sudo`` the above command.
+If that doesn't work, try ``$ sudo npm install -g viewport-tools``.
 
 
 ## Usage

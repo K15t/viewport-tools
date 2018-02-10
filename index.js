@@ -318,6 +318,12 @@ function createViewportrc(action) {
         viewportRc['DEV_' + new Date().toISOString().substring(0, 19)] = viewportRc.DEV;
     }
 
+    // we need to replace semicolons, because they start comments in ini files
+    // more info: https://github.com/npm/ini/issues/42
+    action.viewportrc.confluenceBaseUrl = action.viewportrc.confluenceBaseUrl.replace(/\;/, '\;');
+    action.viewportrc.username = action.viewportrc.username.replace(/\;/, '\;');
+    action.viewportrc.password = action.viewportrc.password.replace(/\;/, '\;');
+
     viewportRc.DEV = action.viewportrc;
     viewportRc.save('.viewportrc');
 
