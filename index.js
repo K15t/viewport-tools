@@ -122,20 +122,19 @@ function readProjectInfo(action) {
                             'Run \'gulp create && gulp watch\' and start developing.'
                         ]
                     }
+                },
+                {
+                    name: 'ZURB Foundation Starter (+Gulp & Sass)',
+                    value: {
+                        repo: 'bitbucket:K15t/viewport-theme-foundation',
+                        path: undefined,
+                        getStartedMessages: [
+                            'Run \'npm i\' to install required dependencies.',
+                            'Run \'bower install\' to download required dependencies.',
+                            'Run \'gulp create && gulp watch\' and start developing.'
+                        ]
+                    }
                 }
-                // ,
-                // {
-                //     name: 'Viewport ',
-                //     value: {
-                //         repo: 'bitbucket:K15t/viewport-theme-foundation',
-                //         path: undefined,
-                //         getStartedMessages: [
-                //             'Run \'npm i\' to install required dependencies.',
-                //             'Run \'bower install\' to install required dependencies.',
-                //             'Run \'gulp create && gulp watch\' and start developing.'
-                //         ]
-                //     }
-                // }
             ]
         },
         {
@@ -264,6 +263,7 @@ function initViewportDevelopment() {
     showWelcomeMessage(action)
         .then(readParams)
         .then(createViewportrc)
+        .then(showWelcomeAfterInitMessage)
 }
 
 
@@ -326,6 +326,13 @@ function createViewportrc(action) {
 
     viewportRc.DEV = action.viewportrc;
     viewportRc.save('.viewportrc');
+
+    return q.resolve(action);
+}
+
+function showWelcomeAfterInitMessage() {
+    console.log('');
+    console.log('Great! Now execute \'viewport create\' to create new theme.');
 
     return q.resolve(action);
 }
