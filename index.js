@@ -128,6 +128,18 @@ function readProjectInfo(action) {
                     value: {
                         repo: 'bitbucket:K15t/viewport-theme-foundation',
                         path: undefined,
+                        replacements: {
+                            'var THEME_NAME = \'your-theme-name\';': function(action) {
+                                return `var THEME_NAME = '${action.theme.key}';`;
+                            },
+                            'var BROWSERSYNC_URL = \'http://localhost:1990/confluence\';': function(action) {
+                                if (action.viewportrc){
+                                    return `var BROWSERSYNC_URL = '${action.viewportrc.confluenceBaseUrl}';`;
+                                } else {
+                                    return `var BROWSERSYNC_URL = 'http://localhost:1990/confluence';`;
+                                }
+                            }
+                        },
                         getStartedMessages: [
                             'Run \'npm i\' to install required dependencies.',
                             'Run \'bower install\' to download required dependencies.',
