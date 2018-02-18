@@ -98,10 +98,10 @@ function readProjectInfo(action) {
         {
             type: 'list',
             name: 'template',
-            message: 'Theme',
+            message: 'Template',
             choices: [
                 {
-                    name: 'Example Theme (with Gulp & Less)',
+                    name: 'Simple (with Gulp & Less)',
                     value: {
                         repo: 'github:K15t/gulp-viewport',
                         path: 'example',
@@ -124,7 +124,7 @@ function readProjectInfo(action) {
                     }
                 },
                 {
-                    name: 'ZURB Foundation Starter (+Gulp & Sass)',
+                    name: 'ZURB Foundation (with Gulp & Sass)',
                     value: {
                         repo: 'bitbucket:K15t/viewport-theme-foundation',
                         path: undefined,
@@ -141,8 +141,9 @@ function readProjectInfo(action) {
                             }
                         },
                         getStartedMessages: [
-                            'Run \'npm i\' to install required dependencies.',
-                            'Run \'bower install\' to download required dependencies.',
+                            'Run \'npm i\' to install required npm dependencies.',
+                            'Run \'bower i\' to download required bower dependencies.\n' +
+                            '     (If you don\'t have bower installed, run \'npm install -g bower\')',
                             'Run \'gulp create && gulp watch\' and start developing.'
                         ]
                     }
