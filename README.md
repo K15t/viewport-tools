@@ -1,9 +1,15 @@
 # viewport-tools
 
-The viewport-tools contain command-line tools for 
-[Scroll Viewport](https://www.k15t.com/software/scroll-viewport) theme 
+
+## Deprecation Notice
+
+This module will be deprecated for its alternative [viewport-uploader](https://github.com/K15t/viewport-uploader). Copy and follow the instructions of the [basic example](https://github.com/K15t/viewport-uploader/tree/master/examples/basic) of this new module to get started with Viewport Theme Development. It uses webpack for bundling which allows you to use ES6 style javascript in your custom theme. `viewport-tools` won't receive any more updates in the future.
+
+The viewport-tools contain command-line tools for
+[Scroll Viewport](https://www.k15t.com/software/scroll-viewport) theme
 developers.
 
+***
 
 ## Installation
 
@@ -27,7 +33,7 @@ $ viewport init
 ```
 
 
-### Create a new Scroll Viewport Theme 
+### Create a new Scroll Viewport Theme
 
 Create a new Scroll Viewport theme project:
 
@@ -48,6 +54,6 @@ NOTE: Make sure to follow the getting started steps provided when the theme has 
 * Tim Pettersen: __Building command line tools with Node.js__, URL: https://developer.atlassian.com/blog/2015/11/scripting-with-node/
 * The npm Blog: __Building a simple command line tool with npm__, URL: http://blog.npmjs.org/post/118810260230/building-a-simple-command-line-tool-with-npm
 
-# License 
+# License
 
 MIT
